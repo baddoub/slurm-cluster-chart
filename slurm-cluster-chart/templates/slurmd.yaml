@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: slurm
+    app.kubernetes.io/component: slurmd
+  name: {{ .Values.slurmd.name }}
+spec:
+  
+  replicas: {{ .Values.slurmd.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: slurm
+      app.kubernetes.io/component: slurmd
+  serviceName: slurmd
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: slurm
+        app.kubernetes.io/component: slurmd
+    spec:
+      containers:
+        - args:
+            - slurmd
+            - -F
+            - -vvv
+            - -N
+            - "$(POD_NAME)"
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          image: {{ .Values.slurmImage }}
+          name: slurmd
+          ports:
+            - containerPort: 6818
+              hostPort:  6818
+          resources:
+{{ toYaml .Values.slurmd.resources | indent 12 }}
+          volumeMounts:
+            - mountPath: /etc/slurm/slurm.conf
+              name: slurm-config-volume
+              subPath: "slurm.conf"
+            - mountPath: /etc/slurm/gres.conf
+              name: slurm-config-volume
+              subPath: "gres.conf"
+            - mountPath: /etc/slurm/cgroup.conf
+              name: slurm-config-volume
+              subPath: "cgroup.conf"               
+            - mountPath: {{ .Values.storage.mountPath }}
+              name: slurm-jobdir
+            - mountPath: /tmp/munge.key
+              name: munge-key-secret
+              subPath: munge.key
+          securityContext:
+            privileged: true
+      #hostname: slurmd-0
+      tolerations:
+        {{- toYaml .Values.slurmd.tolerations | nindent 8 }}      
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        searches:
+          - slurmd.{{ .Release.Namespace }}.svc.cluster.local
+      restartPolicy: Always
+      volumes:
+        - name: slurm-jobdir
+          persistentVolumeClaim:
+            claimName: {{ .Values.storage.claimName }}
+        - name: slurm-config-volume
+          configMap:
+            name: {{ .Values.configmaps.slurmConf }}
+            items:
+            - key: "slurm.conf"
+              path: "slurm.conf"
+            - key: "gres.conf"
+              path: "gres.conf"
+            - key: "cgroup.conf"
+              path: "cgroup.conf"              
+        - name: munge-key-secret
+          secret:
+            secretName: {{ .Values.secrets.mungeKey }}
+            defaultMode: 0400
