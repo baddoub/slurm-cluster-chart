@@ -39,8 +39,15 @@ jobs:
           # Upload entire repository
           path: '.'
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3  # Switch to this action
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          keep_files: true  # This preserves existing files
-          publish_dir: .    # Directory to publish
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Deploy Page to GitHub Pages
+        id: deployment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global credential.helper store
+          echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+          npx -y @koumoul/gh-pages-multi better-target v0.13.0
