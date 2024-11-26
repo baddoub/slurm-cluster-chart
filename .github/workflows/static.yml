@@ -38,10 +38,10 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
-      - name: Deploy Page
+      - name: Deploy Page to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ github.token }}
-          publish_dir: build/geb-spock-reports/envNameHere
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
           publish_branch: gh-pages
           keep_files: true
