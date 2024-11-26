@@ -38,13 +38,6 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
-      - name: Deploy Page to GitHub Pages
+      - name: Deploy to GitHub Pages
         id: deployment
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git config --global credential.helper store
-          echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
-          npx -y @koumoul/gh-pages-multi better-target v0.13.0
+        uses: actions/deploy-pages@v4
