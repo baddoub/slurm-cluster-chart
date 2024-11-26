@@ -38,10 +38,9 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
-      - name: Deploy Page to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3  # Switch to this action
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          publish_branch: gh-pages
-          keep_files: true
+          keep_files: true  # This preserves existing files
+          publish_dir: .    # Directory to publish
