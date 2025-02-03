@@ -1,0 +1,36 @@
+{
+  "name": "oi-slurm-cluster-chart",
+  "version": "0.25.1",
+  "description": "openinnovation oi-slurm-cluster-chart helm chart",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "helm lint"
+  },
+  "keywords": [
+    "helm",
+    "oi-slurm-cluster-chart",
+    "openinnovation"
+  ],
+  "author": "openinnovation.ai",
+  "license": "ISC",
+  "devDependencies": {
+    "@release-it/keep-a-changelog": "^5.0.0",
+    "release-it": "^17.1.1"
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release oi-slurm-cluster-chart-${version}",
+      "tagName": "oi-slurm-cluster-chart-${version}"
+    },
+    "gitlab": {
+      "release": true
+    },
+    "npm": {
+      "publish": false,
+      "skipChecks": true
+    }
+  }
+}
