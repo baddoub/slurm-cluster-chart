@@ -25,4 +25,4 @@ jobs:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
           CR_SKIP_EXISTING: true
         with:
-          charts_dir: .
+          charts_dir: charts
