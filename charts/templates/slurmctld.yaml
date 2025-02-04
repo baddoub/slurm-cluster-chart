@@ -18,7 +18,7 @@ spec:
       app.kubernetes.io/component: slurmctld
       {{- if .Values.slurmctld.podLabels }}
       {{- toYaml .Values.slurmctld.podLabels | nindent 6 }}
-      {{- end }}          
+      {{- end }}       
   template:
     metadata:
       creationTimestamp: null
@@ -29,10 +29,6 @@ spec:
         {{- toYaml .Values.slurmctld.podLabels | nindent 8 }}
         {{- end }}              
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000      
       containers:
         - args:
             - slurmctld
@@ -57,18 +53,12 @@ spec:
               subPath: "cgroup.conf"               
             - mountPath: /tmp/munge.key
               name: munge-key-secret
-              subPath: munge.key            
-            - mountPath: /var/spool/slurmctld
-              name: slurmctld-state
-            - name: config-dir
-              mountPath: /home/config
+              subPath: munge.key
             - name: authorized-keys
               mountPath: /home/config/users.yaml
-              subPath: users.yaml
-          securityContext:
-            #privileged: true
-            runAsUser: 1000
-            runAsGroup: 1000                           
+              subPath: users.yaml              
+            - mountPath: /var/spool/slurmctld
+              name: slurmctld-state
       dnsConfig:
         searches:
           - slurmd.{{ .Release.Namespace }}.svc.cluster.local
@@ -103,9 +93,10 @@ spec:
           secret:
             secretName: {{ .Values.secrets.mungeKey }}
             defaultMode: 0400
-        - name: config-dir
-          emptyDir: {}
         - name: authorized-keys
           configMap:
+            {{ if .Values.sshUsers }}
             name: {{ .Release.Name }}-ssh-users-config
-            defaultMode: 0664
+            {{ else }}
+            name: authorized-keys-configmap
+            {{ end }}

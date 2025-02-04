@@ -20,7 +20,7 @@ spec:
       {{- toYaml .Values.slurmdbd.podLabels | nindent 6 }}
       {{- end }}          
   strategy:
-    type: Recreate  
+    type: Recreate
   template:
     metadata:
       creationTimestamp: null
@@ -32,10 +32,6 @@ spec:
         {{- end }}                           
     spec:
       serviceAccountName: {{ .Release.Name }}
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000   
       containers:
         - args:
             - slurmdbd
@@ -55,21 +51,15 @@ spec:
             - mountPath: /tmp/slurmdbd.conf
               name: dbd-config-volume
               subPath: slurmdbd.conf
-            - name: config-dir
-              mountPath: /home/config
             - name: authorized-keys
               mountPath: /home/config/users.yaml
-              subPath: users.yaml           
+              subPath: users.yaml              
           env:
             - name: StoragePass
               valueFrom:
                 secretKeyRef:
                   name: database-auth-secret
                   key: password
-          securityContext:
-            #privileged: true
-            runAsUser: 1000
-            runAsGroup: 1000                  
       hostname: slurmdbd
       tolerations:
         {{- toYaml .Values.tolerations | nindent 8 }} 
@@ -89,9 +79,6 @@ spec:
           secret:
             secretName: {{ .Values.secrets.mungeKey }}
             defaultMode: 0400
-        - name: config-dir
-          emptyDir: {}
         - name: authorized-keys
           configMap:
-            name: {{ .Release.Name }}-ssh-users-config
-            defaultMode: 0664
+            name: {{ .Release.Name }}-ssh-users-config 

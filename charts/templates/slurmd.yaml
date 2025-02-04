@@ -30,10 +30,6 @@ spec:
         {{- toYaml .Values.slurmd.podLabels | nindent 8 }}
         {{- end }}          
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000      
       containers:
         - args:
             - slurmd
@@ -50,6 +46,7 @@ spec:
           name: slurmd
           ports:
             - containerPort: 6818
+              hostPort:  6818
           resources:
 {{ toYaml .Values.slurmd.resources | indent 12 }}
           volumeMounts:
@@ -67,28 +64,14 @@ spec:
             - mountPath: /tmp/munge.key
               name: munge-key-secret
               subPath: munge.key
-            - name: config-dir
-              mountPath: /home/config
             - name: authorized-keys
               mountPath: /home/config/users.yaml
-              subPath: users.yaml               
+              subPath: users.yaml                
           securityContext:
-            #privileged: true
-            runAsUser: 1000
-            runAsGroup: 1000
+            privileged: true
       #hostNetwork: true
       serviceAccountName: {{ .Release.Name }}
       dnsPolicy: ClusterFirstWithHostNet
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app.kubernetes.io/component
-                operator: In
-                values:
-                - slurmd
-            topologyKey: kubernetes.io/hostname      
       tolerations:
         {{- toYaml .Values.tolerations | nindent 8 }}
       nodeSelector:
@@ -117,9 +100,6 @@ spec:
           secret:
             secretName: {{ .Values.secrets.mungeKey }}
             defaultMode: 0400
-        - name: config-dir
-          emptyDir: {}
         - name: authorized-keys
           configMap:
-            name: {{ .Release.Name }}-ssh-users-config
-            defaultMode: 0664
+            name: {{ .Release.Name }}-ssh-users-config  

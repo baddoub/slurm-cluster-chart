@@ -57,12 +57,11 @@ data:
     CommunicationParameters=NoAddrCache
 
     # NODES
-    GresTypes=gpu
+    #GresTypes=gpu
     MaxNodeCount=10
-    NodeName=slurmd-[0-9] Gres=gpu:{{ .Values.gpuCount }} CPUs=2 RealMemory={{ .Values.slurmd.resources.requests.memory | replace "Gi" "" | int | mul 1024 }} State=FUTURE
+    NodeName=slurmd-[0-9] Gres=gpu:{{ .Values.gpuCount }} State=FUTURE
 
     # PARTITIONS
-    SlurmdParameters=config_overrides
     PartitionName=all Default=yes Nodes=ALL
 
     PropagateResourceLimitsExcept=MEMLOCK

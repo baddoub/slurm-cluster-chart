@@ -13,61 +13,61 @@ spec:
     metadata:
       name: update-sshk-keys-users  
     spec:
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
       serviceAccountName: {{ .Release.Name }}
       restartPolicy: Never
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }} 
       tolerations:
         {{- toYaml .Values.tolerations | nindent 8 }}        
+      imagePullSecrets:
+        - name: {{ .Values.pullSecret | default "gitlab-registry-credentials" | quote }}       
       containers:
       - name: update-users-creation
-        image: registry.gitlab.com/openinnovationai/platform/mlops/slurm-docker/slurm-nfs-client:6fb0735a
+        image: registry.gitlab.com/openinnovationai/platform/mlops/slurm-docker/slurm-nfs-client:2951011a
         command: 
-        - "/bin/bash"
+        - "/bin/sh"
         - "-c"
-        - |
-          echo "Current context:"
-          id
-          
-          echo "Current /home contents:"
-          ls -la /home
-          
-          echo "Removing old config directory..."
-          rm -rf /home/config
-          rm -rf /home/config-new
-          
-          echo "Creating new config directory..."
+        - |          
+          echo "Setting directory permissions..."
           mkdir -p /home/config
-          chmod 775 /home/config
+          chown root:root /home/config
+          chmod 755 /home/config
           
-          echo "New directory status:"
-          ls -la /home
+          echo "Creating temporary file..."
+          cp -v /config/users.yaml /home/config/users.yaml.new
+          chown root:root /home/config/users.yaml.new
+          chmod 644 /home/config/users.yaml.new
+          sync
           
-          echo "Copying users file..."
-          cp -v /tmp/config/users.yaml /home/config/
-          chmod 664 /home/config/users.yaml
+          echo "Moving file into place..."
+          mv -f /home/config/users.yaml.new /home/config/users.yaml
+          sync
           
-          echo "Final status:"
-          ls -la /home/config/users.yaml
+          # Multiple touches to ensure change detection
+          for i in {1..3}; do
+            echo "Touching file attempt $i..."
+            sleep 1
+            touch /home/config/users.yaml
+            sync
+          done
+
+          echo "Waiting for changes to propagate..."
+          sleep 5            
+        #args:
+          #- check-queue-hook
         volumeMounts:
-          - mountPath: /home
-            name: slurm-jobdir
-          - name: config-dir
-            mountPath: /tmp/config
           - name: authorized-keys
-            mountPath: /tmp/config/users.yaml
-            subPath: users.yaml                            
+            mountPath: /config
+          - mountPath: {{ .Values.storage.mountPath }}
+            name: slurm-jobdir                     
       volumes:
         - name: slurm-jobdir
           persistentVolumeClaim:
             claimName: {{ .Values.storage.claimName }}
-        - name: config-dir
-          emptyDir: {}
         - name: authorized-keys
           configMap:
+            {{ if .Values.sshUsers }}
             name: {{ .Release.Name }}-ssh-users-config
-            defaultMode: 0664
+            {{ else }}
+            name: authorized-keys-configmap
+            {{ end }}      

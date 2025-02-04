@@ -31,10 +31,6 @@ spec:
         {{- toYaml .Values.login.podLabels | nindent 8 }}
         {{- end }}         
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000      
       containers:
         - args:
             - login
@@ -60,31 +56,15 @@ spec:
             - mountPath: /etc/ssh/sshd_config
               subPath: sshd_config
               name: sshd-config-configmap
-            - name: host-keys
-              mountPath: /tempmounts/etc/ssh
-            - name: config-dir
-              mountPath: /home/config
             - name: authorized-keys
               mountPath: /home/config/users.yaml
               subPath: users.yaml
-          securityContext:
-            #privileged: true
-            runAsUser: 1000
-            runAsGroup: 1000                            
+            - name: host-keys
+              mountPath: /tempmounts/etc/ssh
           resources:
 {{ toYaml .Values.login.resources | indent 12 }}          
       hostname: login
       serviceAccountName: {{ .Release.Name }}
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app.kubernetes.io/component
-                operator: In
-                values:
-                - login
-            topologyKey: kubernetes.io/hostname       
       tolerations:
         {{- toYaml .Values.tolerations | nindent 8 }}
       nodeSelector:
@@ -116,12 +96,13 @@ spec:
           secret:
             secretName: {{ .Values.secrets.mungeKey }}
             defaultMode: 0400
+        - name: authorized-keys
+          configMap:
+            {{ if .Values.sshUsers }}
+            name: {{ .Release.Name }}-ssh-users-config
+            {{ else }}
+            name: authorized-keys-configmap
+            {{ end }}
         - name: host-keys
           secret:
             secretName: host-keys-secret
-        - name: config-dir
-          emptyDir: {}
-        - name: authorized-keys
-          configMap:
-            name: {{ .Release.Name }}-ssh-users-config
-            defaultMode: 0664
