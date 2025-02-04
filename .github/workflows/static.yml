@@ -18,9 +18,9 @@ jobs:
           version: 'v3.10.0'  # Specify the Helm version
 
       - name: Set up chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: helm/chart-releaser-action@v1.7.0
         with:
-          cr_token: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
 
       - name: Run chart-releaser
         run: |
