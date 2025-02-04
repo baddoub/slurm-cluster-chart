@@ -15,6 +15,7 @@
 *.bak
 *.tmp
 *.orig
+*.lock
 *~
 # Various IDEs
 .project
